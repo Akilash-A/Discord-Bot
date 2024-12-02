@@ -1,0 +1,12 @@
+output for the created ticket
+
+
+Timestamp: 2024-12-02, 12:00:00 PM
+Ticket Number: 1234
+User: User#1234 (10242372648327)
+Registration Number: 123456
+Department: CYS
+Year: 2nd
+Drive URL: https://example.com/drive
+About the Post: Cybersecurity awareness content
+-----------------
