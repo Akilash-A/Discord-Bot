@@ -1,3 +1,4 @@
+
 # 🎉 **Discord Ticketing System Bot** 🎉
 
 ## 🚀 **General Overview**
@@ -129,6 +130,60 @@ This bot creates a **structured workflow** for managing content submissions, pro
 
 - **`bot.txt`**: Logs bot activities like ticket creation and closure.
 - **`ticket.txt`**: Contains ticket details (user data, content information).
+
+---
+
+## 💻 **How to Download and Use the Bot**
+
+To use this Discord bot, follow these steps:
+
+### Step 1: **Clone the Repository**
+
+Clone the bot repository from GitHub using the following command:
+```bash
+git clone https://github.com/Akilash-A/Discord-Bot.git
+```
+
+### Step 2: **Navigate to the Bot Folder**
+
+Change into the bot directory:
+```bash
+cd Discord-Bot
+```
+
+### Step 3: **Install Dependencies**
+
+The bot requires several dependencies to run. You can install them based on your Linux distribution:
+
+- **For Ubuntu/Debian**:
+    ```bash
+    sudo apt update
+    sudo apt install nodejs npm
+    ```
+
+- **For Fedora**:
+    ```bash
+    sudo dnf install nodejs npm
+    ```
+
+- **For Arch Linux**:
+    ```bash
+    sudo pacman -S nodejs npm
+    ```
+
+### Step 4: **Install Required Packages**
+
+After installing Node.js and npm, run the following command to install the necessary packages for the bot:
+```bash
+npm install
+```
+
+### Step 5: **Run the Bot**
+
+Once everything is set up, you can start the bot with the following command:
+```bash
+node bot.js
+```
 
 ---
 
