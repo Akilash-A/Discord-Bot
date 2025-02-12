@@ -14,6 +14,8 @@ const {
   PermissionsBitField,
 } = require('discord.js');
 
+const config = require('./config.json');
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -21,27 +23,20 @@ const client = new Client({
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMessageReactions,
     GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildPresences,
   ],
-  partials: [Partials.Message, Partials.Reaction],
+  partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 });
 
 // Constants
-const CATEGORY_ID = '1300372341348972596'; // Replace with your category ID
-const CHANNEL_ID = '13003763323201484359'; // Replace with your channel ID
-const LOGO_PATH = './image1.jpeg'; // Ensure the logo file is in the same directory
-const LOG_FILE = './bot.txt'; // Log file to record bot activity
-const TICKET_FILE = './ticket.txt'; // File to save ticket details
+const CATEGORY_ID = config.categoryId;
+const CHANNEL_ID = config.channelId;
+const ALLOWED_CLOSERS = config.allowedClosers;
+const LOGO_PATH = './image1.jpeg';
+const LOG_FILE = './bot.txt';
+const TICKET_FILE = './ticket.txt';
 
-// Allowed User IDs to close tickets
-const ALLOWED_CLOSERS = [
-  '124947930676263027', // Replace with valid Discord user IDs
-  '234567890123456789',
-  '345678901234567890',
-  '456789012345678901',
-  '567890123456789012',
-];
-
-// Helper function to write logs to file
+// Helper Functions
 function logToFile(message) {
   const timestamp = new Date().toLocaleString();
   const logMessage = `[${timestamp}] ${message}\n`;
@@ -50,7 +45,6 @@ function logToFile(message) {
   });
 }
 
-// Helper function to save ticket details to ticket.txt
 function saveTicketDetailsToFile(ticketDetails) {
   const timestamp = new Date().toLocaleString();
   const ticketLog = `
@@ -66,16 +60,17 @@ About the Post: ${ticketDetails.aboutPost}
 `;
 
   fs.appendFile(TICKET_FILE, ticketLog, (err) => {
-    if (err) {
-      console.error('Error writing ticket details to file:', err);
-    }
+    if (err) console.error('Error writing ticket details to file:', err);
   });
 }
 
+// Bot Ready Event
 client.once('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
+  console.log('Bot is ready to handle tickets!');
 });
 
+// Message Command Handler
 client.on('messageCreate', async (message) => {
   if (message.content === '!applymessage' && message.channel.id === CHANNEL_ID) {
     const embed = new EmbedBuilder()
@@ -86,7 +81,7 @@ client.on('messageCreate', async (message) => {
         { name: 'Accepted Content', value: 'Content must be related to Technology or Cyber Security.', inline: false },
         { name: 'Type of Content', value: 'Posts, reels, and videos', inline: false },
         { name: 'Social Platforms', value: 'Instagram, Facebook, and YouTube', inline: false },
-        { name: 'Note', value: 'Share knowledge here, and we’ll make a post for you.', inline: false }
+        { name: 'Note', value: "Share knowledge here, and we'll make a post for you.", inline: false }
       )
       .setFooter({
         text: `Whitehatians Srmvec • ${new Date().toLocaleString()}`,
@@ -107,93 +102,174 @@ client.on('messageCreate', async (message) => {
           .setEmoji('🎥')
       );
 
-    await message.channel.send({ embeds: [embed], components: [row], files: [LOGO_PATH] });
+    try {
+      await message.channel.send({ embeds: [embed], components: [row], files: [LOGO_PATH] });
+    } catch (error) {
+      console.error('Error sending application message:', error);
+    }
   }
 });
 
+// Interaction Handler
 client.on('interactionCreate', async (interaction) => {
-  if (interaction.isButton()) {
-    if (interaction.customId === 'post_on_insta' || interaction.customId === 'post_on_youtube') {
-      const modal = new ModalBuilder()
-        .setCustomId('submission_form')
-        .setTitle('Submit Your Post Details');
+  try {
+    // Button Interactions
+    if (interaction.isButton()) {
+      // Handle Post buttons
+      if (interaction.customId === 'post_on_insta' || interaction.customId === 'post_on_youtube') {
+        const modal = new ModalBuilder()
+          .setCustomId('submission_form')
+          .setTitle('Submit Your Post Details');
 
-      const registrationInput = new TextInputBuilder()
-        .setCustomId('registration_number')
-        .setLabel('Registration Number')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('Enter your registration number')
-        .setRequired(true);
+        const registrationInput = new TextInputBuilder()
+          .setCustomId('registration_number')
+          .setLabel('Registration Number')
+          .setStyle(TextInputStyle.Short)
+          .setPlaceholder('Enter your registration number')
+          .setRequired(true);
 
-      const departmentInput = new TextInputBuilder()
-        .setCustomId('department')
-        .setLabel('Department')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('Enter your department')
-        .setRequired(true);
+        const departmentInput = new TextInputBuilder()
+          .setCustomId('department')
+          .setLabel('Department')
+          .setStyle(TextInputStyle.Short)
+          .setPlaceholder('Enter your department')
+          .setRequired(true);
 
-      const yearInput = new TextInputBuilder()
-        .setCustomId('year')
-        .setLabel('Year')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('Enter your year')
-        .setRequired(true);
+        const yearInput = new TextInputBuilder()
+          .setCustomId('year')
+          .setLabel('Year')
+          .setStyle(TextInputStyle.Short)
+          .setPlaceholder('Enter your year')
+          .setRequired(true);
 
-      const driveUrlInput = new TextInputBuilder()
-        .setCustomId('drive_url')
-        .setLabel('Drive URL')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('Enter the URL of your drive (e.g., for resources)')
-        .setRequired(true);
+        const driveUrlInput = new TextInputBuilder()
+          .setCustomId('drive_url')
+          .setLabel('Drive URL')
+          .setStyle(TextInputStyle.Short)
+          .setPlaceholder('Enter the URL of your drive')
+          .setRequired(true);
 
-      const aboutPostInput = new TextInputBuilder()
-        .setCustomId('about_post')
-        .setLabel('About the Post')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Describe the content of the post you want to share')
-        .setRequired(true);
+        const aboutPostInput = new TextInputBuilder()
+          .setCustomId('about_post')
+          .setLabel('About the Post')
+          .setStyle(TextInputStyle.Paragraph)
+          .setPlaceholder('Describe your post content')
+          .setRequired(true);
 
-      modal.addComponents(
-        new ActionRowBuilder().addComponents(registrationInput),
-        new ActionRowBuilder().addComponents(departmentInput),
-        new ActionRowBuilder().addComponents(yearInput),
-        new ActionRowBuilder().addComponents(driveUrlInput),
-        new ActionRowBuilder().addComponents(aboutPostInput)
-      );
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(registrationInput),
+          new ActionRowBuilder().addComponents(departmentInput),
+          new ActionRowBuilder().addComponents(yearInput),
+          new ActionRowBuilder().addComponents(driveUrlInput),
+          new ActionRowBuilder().addComponents(aboutPostInput)
+        );
 
-      await interaction.showModal(modal);
-    }
-  } else if (interaction.isModalSubmit()) {
-    if (interaction.customId === 'submission_form') {
-      await interaction.deferReply({ ephemeral: true });
-
-      const registrationNumber = interaction.fields.getTextInputValue('registration_number');
-      const department = interaction.fields.getTextInputValue('department');
-      const year = interaction.fields.getTextInputValue('year');
-      const driveUrl = interaction.fields.getTextInputValue('drive_url');
-      const aboutPost = interaction.fields.getTextInputValue('about_post');
-
-      const category = interaction.guild.channels.cache.get(CATEGORY_ID);
-      if (!category) {
-        return interaction.followUp({ content: 'Category not found.', ephemeral: true });
+        await interaction.showModal(modal);
       }
 
+      // Handle Close Ticket button
+      if (interaction.customId === 'close_ticket') {
+        if (!ALLOWED_CLOSERS.includes(interaction.user.id)) {
+          return await interaction.reply({
+            content: '❌ You are not authorized to close tickets. Only staff members can close tickets.',
+            ephemeral: true
+          });
+        }
+
+        await interaction.deferReply({ ephemeral: true });
+
+        const ticketNumber = interaction.channel.name.split('-')[1];
+        logToFile(`Ticket #${ticketNumber} closed by ${interaction.user.tag} (${interaction.user.id})`);
+
+        try {
+          const ticketCreator = interaction.channel.permissionOverwrites.cache
+            .find(overwrite =>
+              overwrite.type === 'member' &&
+              overwrite.id !== interaction.user.id &&
+              !ALLOWED_CLOSERS.includes(overwrite.id)
+            );
+
+          if (ticketCreator) {
+            const user = await interaction.client.users.fetch(ticketCreator.id);
+            await user.send(`Your ticket #${ticketNumber} has been closed by a staff member.`).catch(() => {});
+          }
+        } catch (dmError) {
+          console.error('Error sending DM:', dmError);
+        }
+
+        await interaction.followUp({
+          content: '🔒 Closing ticket... This channel will be deleted in 3 seconds.',
+          ephemeral: true
+        });
+
+        setTimeout(() => {
+          interaction.channel.delete()
+            .catch(error => console.error('Error deleting ticket channel:', error));
+        }, 3000);
+      }
+    }
+
+    // Modal Submit Handler
+    if (interaction.isModalSubmit() && interaction.customId === 'submission_form') {
       try {
+        await interaction.deferReply({ ephemeral: true });
+
+        const registrationNumber = interaction.fields.getTextInputValue('registration_number');
+        const department = interaction.fields.getTextInputValue('department');
+        const year = interaction.fields.getTextInputValue('year');
+        const driveUrl = interaction.fields.getTextInputValue('drive_url');
+        const aboutPost = interaction.fields.getTextInputValue('about_post');
+
+        const category = interaction.guild.channels.cache.get(CATEGORY_ID);
+        if (!category) {
+          return await interaction.followUp({
+            content: 'Category not found. Please contact an administrator.',
+            ephemeral: true
+          });
+        }
+
         const randomNumber = Math.floor(1000 + Math.random() * 9000);
+
+        const permissionOverwrites = [
+          {
+            id: interaction.guild.id,
+            deny: [PermissionsBitField.Flags.ViewChannel],
+          },
+          {
+            id: interaction.user.id,
+            allow: [
+              PermissionsBitField.Flags.ViewChannel,
+              PermissionsBitField.Flags.SendMessages,
+              PermissionsBitField.Flags.ReadMessageHistory,
+            ],
+          }
+        ];
+
+        for (const closerId of ALLOWED_CLOSERS) {
+          try {
+            const user = await interaction.client.users.fetch(closerId).catch(() => null);
+            if (user) {
+              permissionOverwrites.push({
+                id: closerId,
+                allow: [
+                  PermissionsBitField.Flags.ViewChannel,
+                  PermissionsBitField.Flags.SendMessages,
+                  PermissionsBitField.Flags.ReadMessageHistory,
+                  PermissionsBitField.Flags.ManageChannels,
+                ],
+              });
+            }
+          } catch (error) {
+            console.error(`Invalid user ID in ALLOWED_CLOSERS: ${closerId}`);
+            continue;
+          }
+        }
+
         const ticketChannel = await interaction.guild.channels.create({
           name: `ticket-${randomNumber}`,
           type: ChannelType.GuildText,
           parent: category.id,
-          permissionOverwrites: [
-            {
-              id: interaction.guild.id,
-              deny: [PermissionsBitField.Flags.ViewChannel],
-            },
-            {
-              id: interaction.user.id,
-              allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages],
-            },
-          ],
+          permissionOverwrites: permissionOverwrites,
         });
 
         const ticketDetails = {
@@ -210,16 +286,18 @@ client.on('interactionCreate', async (interaction) => {
         logToFile(`Ticket #${randomNumber} created by ${interaction.user.tag} (${interaction.user.id})`);
 
         const embed = new EmbedBuilder()
-          .setTitle('Your ticket has been created:')
-          .setColor('Red')
+          .setTitle(`Ticket #${randomNumber}`)
+          .setColor('Blue')
           .setDescription(
+            `**User:** ${interaction.user.tag}\n` +
             `**Registration Number:** ${registrationNumber}\n` +
             `**Department:** ${department}\n` +
             `**Year:** ${year}\n` +
             `**Drive URL:** ${driveUrl}\n` +
             `**About the Post:** ${aboutPost}`
           )
-          .setFooter({ text: 'Click the button below to close the ticket.' });
+          .setTimestamp()
+          .setFooter({ text: 'Only authorized staff can close this ticket.' });
 
         const closeButton = new ActionRowBuilder()
           .addComponents(
@@ -230,47 +308,40 @@ client.on('interactionCreate', async (interaction) => {
               .setEmoji('🎫')
           );
 
-        await ticketChannel.send({ embeds: [embed], components: [closeButton] });
+        await ticketChannel.send({
+          content: `Welcome <@${interaction.user.id}>!\nSupport team will be with you shortly.`,
+          embeds: [embed],
+          components: [closeButton]
+        });
 
-        await interaction.followUp({ content: `Your ticket has been created: ${ticketChannel}`, ephemeral: true });
+        await interaction.followUp({
+          content: `Your ticket has been created: ${ticketChannel}`,
+          ephemeral: true
+        });
+
       } catch (error) {
-        console.error('Error creating ticket channel:', error);
-        await interaction.followUp({ content: 'An error occurred while creating the ticket. Please try again.', ephemeral: true });
-      }
-    }
-  }
-
-  if (interaction.isButton()) {
-    if (interaction.customId === 'close_ticket') {
-      if (!ALLOWED_CLOSERS.includes(interaction.user.id)) {
-        return interaction.reply({ content: 'You are not authorized to close this ticket.', ephemeral: true });
-      }
-
-      const ticketNumber = interaction.channel.name.split('-')[1];
-      console.log(`Closing ticket: ${interaction.channel.name}`);
-
-      try {
-        await interaction.reply({ content: 'Closing ticket...', ephemeral: true });
-
-        logToFile(`Ticket #${ticketNumber} closed by ${interaction.user.tag} (${interaction.user.id})`);
-
+        console.error('Error creating ticket:', error);
         try {
-          await interaction.user.send(`❌ Your ticket has been closed: ${interaction.channel.name}. Thank you for your submission!`);
-        } catch (error) {
-          console.error('Error sending DM:', error);
-        }
-
-        setTimeout(() => {
-          interaction.channel.delete().catch((error) => {
-            console.error('Error deleting ticket channel:', error);
+          await interaction.followUp({
+            content: 'An error occurred while creating the ticket. Please try again or contact an administrator.',
+            ephemeral: true
           });
-        }, 3000);
-      } catch (error) {
-        console.error('Error closing the ticket:', error);
-        await interaction.reply({ content: 'There was an error closing the ticket. Please try again later.', ephemeral: true });
+        } catch (followUpError) {
+          console.error('Error sending followUp:', followUpError);
+        }
       }
     }
+  } catch (error) {
+    console.error('Interaction error:', error);
   }
 });
 
-client.login('DISCORD_BOT_TOKEN');
+// Error handling
+client.on('error', error => {
+  console.error('Discord client error:', error);
+});
+
+// Login
+client.login(config.token).catch(error => {
+  console.error('Error logging in:', error);
+});
