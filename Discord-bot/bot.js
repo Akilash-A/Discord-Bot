@@ -81,7 +81,7 @@ client.on('messageCreate', async (message) => {
         { name: 'Accepted Content', value: 'Content must be related to Technology or Cyber Security.', inline: false },
         { name: 'Type of Content', value: 'Posts, reels, and videos', inline: false },
         { name: 'Social Platforms', value: 'Instagram, Facebook, and YouTube', inline: false },
-        { name: 'Note', value: "Share knowledge here, and we'll make a post for you.", inline: false }
+        { name: 'Note', value: "You can share any knowledge here, We'll make a post for you", inline: false }
       )
       .setFooter({
         text: `Whitehatians Srmvec • ${new Date().toLocaleString()}`,
